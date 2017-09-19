@@ -1,4 +1,4 @@
-import { Component, OnInit, OnChanges, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import * as d3 from 'd3';
 
 @Component({
@@ -6,9 +6,20 @@ import * as d3 from 'd3';
   templateUrl: './chart.component.html',
   styleUrls: ['./chart.component.css']
 })
-export class ChartComponent implements OnInit, OnChanges {
+export class ChartComponent implements OnInit{
 
-  data = [4, 8, 15, 16, 23, 42];
+  margin: any = {top: 20, bottom: 20, left: 20, right: 20};
+  width: number;
+  height: number;
+  data = [
+    {num: 0, water: 3, pressure: 1, ev_stop: 2},
+    {num: 1, water: 4, pressure: 3},
+    {num: 2, water: 2, pressure: 9},
+    {num: 3, water: 3, pressure: 5},
+    {num: 4, water: 1, pressure: 11},
+  ];
+
+
   @ViewChild('chart') private chartContainer: ElementRef;
   constructor() { }
 
@@ -16,93 +27,88 @@ export class ChartComponent implements OnInit, OnChanges {
     this.createChart();
   }
 
-  ngOnChanges() {
+  barSize(){
+    return this.width / this.data.length;
   }
 
   createChart(){
     let element = this.chartContainer.nativeElement;
-    let x = d3.scaleLinear()
-      .domain([0, d3.max(this.data)])
-      .range([0, 420]);
+    console.log(element.offsetWidth, element.offsetHeight);
+    this.width = element.offsetWidth -this.margin.left - this.margin.right;
+    this.height = element.offsetHeight - this.margin.top - this.margin.bottom;
 
-    d3.select(element)
-      .selectAll("div")
-        .data(this.data)
-      .enter().append("div")
-        .style("width", function(d) { return d * 10 + "px"; })
-        .text(function(d) { return d; });
+    let x = d3.scaleLinear()
+      // .domain([0, d3.max(this.data.num)])
+      .domain([0, 4])
+      .range([this.barSize() / 2, this.width - this.barSize()/2]);
+
+    let y = d3.scaleLinear()
+      .domain([0, 11])
+      .range([this.height, 0]);
+
+    let xAxis = d3.axisBottom(x).ticks(5);
+    let yAxis = d3.axisLeft(y).ticks(11).tickSize(-this.width)
+
+    let xGrid = d3.axisBottom(x)
+      // .tickSize(-this.height, 0, 0)
+      .ticks(4)
+      .tickFormat((d, i)=> { return d+" s";})
+      .tickSize(-this.height);
+
+
+    let svg = d3.select(element).append('svg')
+      .attr('width', element.offsetWidth)
+      .attr('height', element.offsetHeight)
+      .append('g')
+        .attr("transform","translate("+this.margin.left+","+this.margin.top+")");
+
+    svg.append('g')
+        .attr("class", "x axis")
+        .attr("transform", "translate("+0+", "+this.height+")")
+        .call(xAxis);
+
+    svg.append('g')
+      .attr("class", "y axis")
+      .attr("transform", "translate("+0+", 0)")
+      .call(yAxis);
+
+      //Griglia
+    svg.append('g')
+      .attr("class","grid")
+      .attr("transform", "translate("+this.width/2/this.data.length+","+this.height+")")
+      .call(xGrid);
+
+    svg.selectAll('rect')
+      .data(this.data)
+      .enter().append('rect')
+        .attr('x', (d,i) => { return (x(d.num) - this.barSize()/ 2); })
+        .attr('y', (d,i) => {return y(d.pressure)})
+        .attr('width', this.barSize())
+        .attr('height', (d) => { return this.height - y(d.pressure)});
+
+    svg.select(".grid")
+      .selectAll(".tick")
+      .each((d,i)=>{
+          console.log(this);
+          // var tick = d3.select(this);
+          // // let text = tick.select('text');
+          // console.log(tick);
+          // let text = tick.select('text');
+          // console.log(text);
+          //bBox = text.node().getBBox();
+
+        // text.style("fill","blue");
+        // text.style("stroke","blue");
+        //
+        // tick.insert('rect')
+        //   .attr('x', bBox.x - 3)
+        //   .attr('y', bBox.y)
+        //   .attr('height', bBox.height + 6)
+        //   .attr('width', bBox.width + 20)
+        //   .style('fill','red')
+      });
+
+
+
   }
-    // let element = this.chartContainer.nativeElement;
-    // this.width = element.offsetWidth - this.margin.left - this.margin.right;
-    // this.height = element.offsetHeight - this.margin.top - this.margin.bottom;
-    // let svg = d3.select(element).append('svg')
-    //   .attr('width', element.offsetWidth)
-    //   .attr('height', element.offsetHeight);
-    //   // chart plot area
-    //   this.chart = svg.append('g')
-    //     .attr('class', 'bars')
-    //     .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`);
-    //
-    //   // define X & Y domains
-    //   let xDomain = this.data.map(d => d[0]);
-    //   let yDomain = [0, d3.max(this.data, d => d[1])];
-    //
-    //   // create scales
-    //   this.xScale = d3.scaleBand().padding(0.1).domain(xDomain).rangeRound([0, this.width]);
-    //   this.yScale = d3.scaleLinear().domain(yDomain).range([this.height, 0]);
-    //
-    //   // bar colors
-    //   this.colors = d3.scaleLinear().domain([0, this.data.length]).range(<any[]>['red', 'blue']);
-    //
-    //   // x & y axis
-    //   this.xAxis = svg.append('g')
-    //     .attr('class', 'axis axis-x')
-    //     .attr('transform', `translate(${this.margin.left}, ${this.margin.top + this.height})`)
-    //     .call(d3.axisBottom(this.xScale));
-    //   this.yAxis = svg.append('g')
-    //     .attr('class', 'axis axis-y')
-    //     .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`)
-    //     .call(d3.axisLeft(this.yScale));
-    // }
-    //
-    //
-    //
-    // updateChart(){
-    //   // update scales & axis
-    //       this.xScale.domain(this.data.map(d => d[0]));
-    //       this.yScale.domain([0, d3.max(this.data, d => d[1])]);
-    //       this.colors.domain([0, this.data.length]);
-    //       this.xAxis.transition().call(d3.axisBottom(this.xScale));
-    //       this.yAxis.transition().call(d3.axisLeft(this.yScale));
-    //
-    //       let update = this.chart.selectAll('.bar')
-    //         .data(this.data);
-    //
-    //       // remove exiting bars
-    //       update.exit().remove();
-    //
-    //       // update existing bars
-    //       this.chart.selectAll('.bar').transition()
-    //         .attr('x', d => this.xScale(d[0]))
-    //         .attr('y', d => this.yScale(d[1]))
-    //         .attr('width', d => this.xScale.bandwidth())
-    //         .attr('height', d => this.height - this.yScale(d[1]))
-    //         .style('fill', (d, i) => this.colors(i));
-    //
-    //       // add new bars
-    //       update
-    //         .enter()
-    //         .append('rect')
-    //         .attr('class', 'bar')
-    //         .attr('x', d => this.xScale(d[0]))
-    //         .attr('y', d => this.yScale(0))
-    //         .attr('width', this.xScale.bandwidth())
-    //         .attr('height', 0)
-    //         .style('fill', (d, i) => this.colors(i))
-    //         .transition()
-    //         .delay((d, i) => i * 10)
-    //         .attr('y', d => this.yScale(d[1]))
-    //         .attr('height', d => this.height - this.yScale(d[1]));
-    //
-    // }
 }

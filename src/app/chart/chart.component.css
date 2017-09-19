@@ -1,8 +1,32 @@
-.chart >>> div {
+.chart{
+  width: 600px;
+  height: 500px;
+  border: 1px solid red;
+}
+
+.chart >>> rect {
+  fill: steelblue;
+  opacity: .5;
+}
+
+.chart >>> .grid >>> .tick {
+  stroke: red; stroke-opacity: 0.7; shape-rendering: crispEdges;
+}
+.chart >>> .grid >>> path {
+          /*stroke: red;*/
+          stroke-width: 0;
+}
+.chart >>> .axis {
   font: 10px sans-serif;
-  background-color: steelblue;
-  text-align: right;
-  padding: 3px;
-  margin: 1px;
-  color: white;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {
+  display: none;
 }
